@@ -55,6 +55,7 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
 		key, salt := deriveKey(password)
 		fmt.Println("Key: ", base64.StdEncoding.EncodeToString(key))
 		fmt.Println("Salt: ", base64.StdEncoding.EncodeToString(salt))
@@ -64,6 +65,7 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
 		encrypt(password, input, output)
 	case "decrypt":
 		err := decryptCmd.Parse(os.Args[2:])
@@ -71,6 +73,7 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
 		decrypt(password, input, output)
 	default:
 		help()
@@ -126,6 +129,7 @@ func readCipherFile(filename string) ([]byte, []byte, []byte) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	fileStat, err := file.Stat()
 	if err != nil {
 		fmt.Println(err)
@@ -153,11 +157,13 @@ func encrypt(password string, input string, output string) {
 		fmt.Println("Input file does not exist.")
 		os.Exit(1)
 	}
+
 	plaintext, err := ioutil.ReadFile(input)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	key, salt := deriveKey(password)
 	nonce := make([]byte, 12)
 	_, err = rand.Read(nonce)
@@ -165,11 +171,13 @@ func encrypt(password string, input string, output string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	AESGCM, err := cipher.NewGCM(block)
 	if err != nil {
 		fmt.Println(err)
@@ -198,10 +206,13 @@ func decrypt(password string, input string, output string) {
 	if err != nil {
 		panic(err.Error())
 	}
+
 	AESGCM, err := cipher.NewGCM(block)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
+		os.Exit(1)
 	}
+
 	plaintext, err := AESGCM.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		fmt.Println(err)
