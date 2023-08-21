@@ -22,12 +22,14 @@ func main() {
 	 *     derive-key -p [PASSWORD]
 	 *     encrypt:
 	 *  	   -p [PASSWORD] -i [INPUT] -o [OUTPUT] // uses default key derivation parameters
-	 *     decrypt:
+	 *     decryptWithPassword:
 	 *  	   -p [PASSWORD] -i [INPUT] -o [OUTPUT] // uses salt and iterations from encoded input file
 	 */
 	var password string
 	var input string
 	var output string
+	var key string
+	var deleteFile bool
 
 	// parse command-line arguments
 	deriveKeyCmd := flag.NewFlagSet("derive-key", flag.ExitOnError)
@@ -37,11 +39,15 @@ func main() {
 	encryptCmd.StringVar(&password, "p", "", "password")
 	encryptCmd.StringVar(&input, "i", "", "input file")
 	encryptCmd.StringVar(&output, "o", "", "output file")
+	encryptCmd.StringVar(&key, "k", "", "existing key (base64)")
+	encryptCmd.BoolVar(&deleteFile, "d", false, "deleteFile the input file after encryption")
 
-	decryptCmd := flag.NewFlagSet("decrypt", flag.ExitOnError)
+	decryptCmd := flag.NewFlagSet("decryptWithPassword", flag.ExitOnError)
 	decryptCmd.StringVar(&password, "p", "", "password")
 	decryptCmd.StringVar(&input, "i", "", "input file")
 	decryptCmd.StringVar(&output, "o", "", "output file")
+	decryptCmd.StringVar(&key, "k", "", "existing key (base64)")
+	decryptCmd.BoolVar(&deleteFile, "d", false, "deleteFile the input file after decryption")
 
 	if len(os.Args) < 2 {
 		help()
@@ -66,18 +72,40 @@ func main() {
 			os.Exit(1)
 		}
 
-		encrypt(password, input, output)
-	case "decrypt":
+		if key != "" {
+			encryptWithKey(key, input, output)
+		} else if &password != nil {
+			encryptWithPassword(password, input, output)
+		} else {
+			fmt.Println("Either a key or a password must be provided.")
+			os.Exit(1)
+		}
+	case "decryptWithPassword":
 		err := decryptCmd.Parse(os.Args[2:])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		decrypt(password, input, output)
+		if key != "" {
+			decryptWithKey(key, input, output)
+		} else if &password != nil {
+			decryptWithPassword(password, input, output)
+		} else {
+			fmt.Println("Either a key or a password must be provided.")
+			os.Exit(1)
+		}
 	default:
 		help()
 		os.Exit(1)
+	}
+
+	if deleteFile {
+		err := os.Remove(input)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -85,8 +113,8 @@ func help() {
 	fmt.Println("Usage: poni [COMMAND] [OPTIONS]")
 	fmt.Println("Commands:")
 	fmt.Println("    derive-key -p [PASSWORD]")
-	fmt.Println("    encrypt -p [PASSWORD] -i [INPUT] -o [OUTPUT]")
-	fmt.Println("    decrypt -p [PASSWORD] -i [INPUT] -o [OUTPUT]")
+	fmt.Println("    encrypt -p|k [PASSWORD|KEY] -i [INPUT] -o [OUTPUT]")
+	fmt.Println("    decryptWithPassword -p|k [PASSWORD|KEY] -i [INPUT] -o [OUTPUT]")
 }
 
 func fileExists(filename string) bool {
@@ -152,7 +180,7 @@ func readCipherFile(filename string) ([]byte, []byte, []byte) {
 	return salt, nonce, ciphertext
 }
 
-func encrypt(password string, input string, output string) {
+func encrypt(key []byte, salt []byte, input string, output string) {
 	if !fileExists(input) {
 		fmt.Println("Input file does not exist.")
 		os.Exit(1)
@@ -164,7 +192,6 @@ func encrypt(password string, input string, output string) {
 		os.Exit(1)
 	}
 
-	key, salt := deriveKey(password)
 	nonce := make([]byte, 12)
 	_, err = rand.Read(nonce)
 	if err != nil {
@@ -199,9 +226,25 @@ func encrypt(password string, input string, output string) {
 	}
 }
 
-func decrypt(password string, input string, output string) {
-	salt, nonce, ciphertext := readCipherFile(input)
-	key, _ := deriveKeyWithSalt(password, salt)
+func encryptWithKey(key string, input string, output string) {
+	bkey := make([]byte, 32)
+	salt := make([]byte, 32) // nil salt
+	_, err := base64.StdEncoding.Decode(bkey, []byte(key))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	encrypt(bkey, salt, input, output)
+}
+
+func encryptWithPassword(password string, input string, output string) {
+	key, salt := deriveKey(password)
+	encrypt(key, salt, input, output)
+}
+
+func decrypt(key []byte, input string, output string) {
+	_, nonce, ciphertext := readCipherFile(input)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err.Error())
@@ -224,4 +267,21 @@ func decrypt(password string, input string, output string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func decryptWithKey(key string, input string, output string) {
+	bkey := make([]byte, 32)
+	_, err := base64.StdEncoding.Decode(bkey, []byte(key))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	decrypt(bkey, input, output)
+}
+
+func decryptWithPassword(password string, input string, output string) {
+	salt, _, _ := readCipherFile(input)
+	key, _ := deriveKeyWithSalt(password, salt)
+	decrypt(key, input, output)
 }

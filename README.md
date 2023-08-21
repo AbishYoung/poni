@@ -5,7 +5,13 @@ Poni secures data using a password which is passed through 200,000 iterations of
 ## usage
 #### encrypt
 `poni encrypt -p PASSWORD -i INPUT_FILE -o OUTPUT_FILE`
+
+`poni encrypt -k KEY -i INPUT_FILE -o OUTPUT_FILE`
 #### decrypt
 `poni decrypt -p PASSWORD -i INPUT_FILE -o OUTPUT_FILE`
+
+`poni decrypt -k KEY -i INPUT_FILE -o OUTPUT_FILE`
 #### generate a key
 `poni derive-key -p PASSWORD`
+
+Additionally, the `-d` flag can be specified to delete the input file upon encryption/decryption.
