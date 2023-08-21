@@ -42,7 +42,7 @@ func main() {
 	encryptCmd.StringVar(&key, "k", "", "existing key (base64)")
 	encryptCmd.BoolVar(&deleteFile, "d", false, "deleteFile the input file after encryption")
 
-	decryptCmd := flag.NewFlagSet("decryptWithPassword", flag.ExitOnError)
+	decryptCmd := flag.NewFlagSet("decrypt", flag.ExitOnError)
 	decryptCmd.StringVar(&password, "p", "", "password")
 	decryptCmd.StringVar(&input, "i", "", "input file")
 	decryptCmd.StringVar(&output, "o", "", "output file")
@@ -80,7 +80,7 @@ func main() {
 			fmt.Println("Either a key or a password must be provided.")
 			os.Exit(1)
 		}
-	case "decryptWithPassword":
+	case "decrypt":
 		err := decryptCmd.Parse(os.Args[2:])
 		if err != nil {
 			fmt.Println(err)
@@ -114,7 +114,7 @@ func help() {
 	fmt.Println("Commands:")
 	fmt.Println("    derive-key -p [PASSWORD]")
 	fmt.Println("    encrypt -p|k [PASSWORD|KEY] -i [INPUT] -o [OUTPUT]")
-	fmt.Println("    decryptWithPassword -p|k [PASSWORD|KEY] -i [INPUT] -o [OUTPUT]")
+	fmt.Println("    decrypt -p|k [PASSWORD|KEY] -i [INPUT] -o [OUTPUT]")
 }
 
 func fileExists(filename string) bool {
