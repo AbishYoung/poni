@@ -12,6 +12,7 @@ func main() {
 	registerCommand("encrypt", encryptHandler)
 	registerCommand("decrypt", decryptHandler)
 	registerCommand("keygen", keygenHandler)
+	registerCommand("keyexchange", ECDHKEHandler)
 
 	if len(os.Args) < 2 {
 		help()

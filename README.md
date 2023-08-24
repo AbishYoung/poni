@@ -13,6 +13,7 @@ Poni currently supports the following commands, though more are planned for the 
 * encrypt
 * decrypt
 * keygen
+* keyexchange
 
 Each of these commands have their own respective usages which can be accessed through the `-h` flag for each.
 
@@ -52,6 +53,40 @@ poni keygen -p <password> [-s <salt>]
 
 -p <password>         A password or passphrase to use for key generation
 [-s <salt>]           A salt to use for key generation
+```
+
+### Keyexchange
+This command provides a way to generate a shared secret through an unsecured channel using the Elliptical Curve Diffie-Hellman Key Exchange (ECDHKE) algorithm on the X25519 curve. This command is meant to be used in conjunction with the encrypt and decrypt commands to provide a way to encrypt and decrypt messages without having to share a key beforehand. The keyexchange command will output a public key which can be shared with the other party. The other party will then provide their public key to the keyexchange command which will then output a shared secret which can be used as a key for the encrypt and decrypt commands.
+
+```
+Usage: poni keyexchange [-generate-keys] [-generate-shared] [-k <private-key>] [-r <public-key>]
+
+[-generate-keys]              Generate initial key pairs
+[-generate-shared]            Generate shared secret
+        -k <key>              The private key to use for key exchange (required)
+        -r <key>              The public key to use for key exchange (required)
+```
+
+A complete key exchange would look something like this:
+
+```
+# Alice
+$ poni keyexchange -generate-keys
+Private key: XjhGxThmlIoQk27qgWnuAqzHEWxFk9U0SWgtPlCZLIE=
+Public key: Ca5tFXzqUXkGGBcPzT6fNBZfTwirKPtSNU0BA+uKz38=
+
+# Bob
+$ poni keyexchange -generate-keys
+Private key: gmZsULnQPPPIVa8oClCd9XvV8v3JM/HU94YNfW8z1jc=
+Public key: JuOQ5C/s3SSawsT1jTzYW8s1hk9ahaB2iGiHu3RMWG8=
+
+# Alice
+$ poni keyexchange -k XjhGxThmlIoQk27qgWnuAqzHEWxFk9U0SWgtPlCZLIE= -r JuOQ5C/s3SSawsT1jTzYW8s1hk9ahaB2iGiHu3RMWG8=
+Shared secret: m5YRm+cz5lKdSfQ6gdzsv8MajXBO/LYqD0lhZKrcJQA=
+
+# Bob
+$ poni keyexchange -k gmZsULnQPPPIVa8oClCd9XvV8v3JM/HU94YNfW8z1jc= -r Ca5tFXzqUXkGGBcPzT6fNBZfTwirKPtSNU0BA+uKz38=
+Shared secret: m5YRm+cz5lKdSfQ6gdzsv8MajXBO/LYqD0lhZKrcJQA=
 ```
 
 ## License

@@ -1,3 +1,12 @@
+/**
+ * This file is a part of the poni project and is licensed under the MIT license.
+ * See LICENSE.md for details.
+ *
+ * decrypt.go
+ * Contains the decryption command functions.
+ *
+ * @created 2023-08-20
+ */
 package main
 
 import (
@@ -66,7 +75,7 @@ func decryptHandler(args []string) {
 		}
 		iv = blob[:12]
 		ciphertext := blob[12:]
-		plaintext, err = Decrypt(decodedKey, ciphertext, iv)
+		plaintext, err = decrypt(decodedKey, ciphertext, iv)
 	case "file":
 		blob, err := readFile(file)
 		if err != nil {
@@ -75,7 +84,7 @@ func decryptHandler(args []string) {
 		}
 		iv = blob[:12]
 		ciphertext := blob[12:]
-		plaintext, err = Decrypt(decodedKey, ciphertext, iv)
+		plaintext, err = decrypt(decodedKey, ciphertext, iv)
 	case "stdin":
 		blob, err := readStdin()
 		if err != nil {
@@ -84,7 +93,7 @@ func decryptHandler(args []string) {
 		}
 		iv = blob[:12]
 		ciphertext := blob[12:]
-		plaintext, err = Decrypt(decodedKey, ciphertext, iv)
+		plaintext, err = decrypt(decodedKey, ciphertext, iv)
 	}
 
 	if err != nil {
@@ -111,10 +120,10 @@ func decryptUsage() {
 	fmt.Println()
 }
 
-// Decrypt
+// decrypt
 // Decrypts a ciphertext using AES-GCM.
 // Returns the plaintext and an error.
-func Decrypt(key []byte, ciphertext []byte, iv []byte) ([]byte, error) {
+func decrypt(key []byte, ciphertext []byte, iv []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

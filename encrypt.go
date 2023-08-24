@@ -3,9 +3,9 @@
  * See LICENSE.md for details.
  *
  * encrypt.go
- * Contains the encryption and decryption functions.
+ * Contains the encryption command functions.
  *
- * @created 2023-08-20
+ * @created 2023-08-23
  */
 package main
 
@@ -30,7 +30,6 @@ func encryptHandler(args []string) {
 	var ciphertext []byte
 	var iv []byte
 
-	fmt.Println(args)
 	command := flag.NewFlagSet("encrypt", flag.ExitOnError)
 	command.StringVar(&key, "k", "", "The key to use for encryption")
 	command.StringVar(&plaintext, "m", "", "The plaintext to encrypt")
@@ -70,21 +69,21 @@ func encryptHandler(args []string) {
 
 	switch mode {
 	case "plaintext":
-		ciphertext, iv, err = Encrypt(decodedKey, []byte(plaintext))
+		ciphertext, iv, err = encrypt(decodedKey, []byte(plaintext))
 	case "file":
 		plaintext, err := readFile(file)
 		if err != nil {
 			fmt.Println("Failed to read file")
 			return
 		}
-		ciphertext, iv, err = Encrypt(decodedKey, plaintext)
+		ciphertext, iv, err = encrypt(decodedKey, plaintext)
 	case "stdin":
 		plaintext, err := readStdin()
 		if err != nil {
 			fmt.Println("Failed to read stdin")
 			return
 		}
-		ciphertext, iv, err = Encrypt(decodedKey, plaintext)
+		ciphertext, iv, err = encrypt(decodedKey, plaintext)
 	}
 
 	if err != nil {
@@ -111,10 +110,10 @@ func encryptUsage() {
 	fmt.Println()
 }
 
-// Encrypt
+// encrypt
 // Encrypts a plaintext using AES-GCM.
 // Returns the ciphertext, the IV, and an error.
-func Encrypt(key []byte, plaintext []byte) (ciphertext []byte, iv []byte, err error) {
+func encrypt(key []byte, plaintext []byte) (ciphertext []byte, iv []byte, err error) {
 	iv = make([]byte, 12)
 	_, err = rand.Read(iv)
 	if err != nil {
