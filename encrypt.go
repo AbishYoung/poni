@@ -114,9 +114,9 @@ func encryptUsage() {
 // Encrypt
 // Encrypts a plaintext using AES-GCM.
 // Returns the ciphertext, the IV, and an error.
-func Encrypt(key []byte, plaintext []byte) ([]byte, []byte, error) {
-	iv := make([]byte, 12)
-	_, err := rand.Read(iv)
+func Encrypt(key []byte, plaintext []byte) (ciphertext []byte, iv []byte, err error) {
+	iv = make([]byte, 12)
+	_, err = rand.Read(iv)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -131,7 +131,7 @@ func Encrypt(key []byte, plaintext []byte) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 
-	ciphertext := AESCipher.Seal(nil, iv, plaintext, nil)
+	ciphertext = AESCipher.Seal(nil, iv, plaintext, nil)
 
 	return ciphertext, iv, nil
 }

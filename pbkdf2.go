@@ -35,10 +35,10 @@ func DeriveKey(password string) (key []byte, salt []byte, err error) {
 // DeriveKeyWithSalt
 // Derives a key from a password and a salt using PBKDF2.
 // Returns the key and an error.
-func DeriveKeyWithSalt(password string, salt []byte) (key []byte, err error) {
+func DeriveKeyWithSalt(password string, salt []byte) ([]byte, error) {
 	iterations := 200_000
 	keySize := 32
 	algo := sha3.New256
-	key = pbkdf2.Key([]byte(password), salt, iterations, keySize, algo)
+	key := pbkdf2.Key([]byte(password), salt, iterations, keySize, algo)
 	return key, nil
 }
