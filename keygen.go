@@ -47,7 +47,7 @@ func keygenHandler(args []string) {
 			return
 		}
 
-		key, keySalt, err := DeriveKey(password)
+		key, keySalt, err := deriveKey(password)
 		if err != nil {
 			fmt.Println("Failed to generate key")
 			return
@@ -62,7 +62,7 @@ func keygenHandler(args []string) {
 			return
 		}
 
-		key, err := DeriveKeyWithSalt(password, decodedSalt)
+		key, err := deriveKeyWithSalt(password, decodedSalt)
 		if err != nil {
 			fmt.Println("Failed to generate key")
 			return
