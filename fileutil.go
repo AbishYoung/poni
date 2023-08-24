@@ -9,46 +9,66 @@
  */
 package main
 
-import "encoding/base64"
+import (
+	"fmt"
+	"os"
+)
 
-// ReadCiphertext
-// Reads a ciphertext blob and returns the IV and ciphertext.
-// Returns the IV, the ciphertext, and an error.
-func ReadCiphertext(blob []byte) (iv []byte, ciphertext []byte, err error) {
-	blob, err = b64d(string(blob))
-	if err != nil {
-		return nil, nil, err
+// fileExists
+// Checks if a file exists.
+// Returns true if it exists, false if not.
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
 	}
 
-	iv = blob[:12]
-	ciphertext = blob[12:]
-	return iv, ciphertext, nil
+	return true
 }
 
-// WriteCiphertext
-// Writes a ciphertext blob from an IV and ciphertext.
-// Returns the ciphertext blob.
-func WriteCiphertext(iv []byte, ciphertext []byte) (blob []byte) {
-	blob = append(iv, ciphertext...)
-	return blob
-}
+// readFile
+// Reads a file and returns the contents.
+// Returns the contents of the file and an error.
+func readFile(path string) ([]byte, error) {
+	if !fileExists(path) {
+		return nil, os.ErrNotExist
+	}
 
-// b64e
-// Encodes a byte slice to base64.
-// Returns the encoded string.
-func b64e(data []byte) (encoded string) {
-	encoded = base64.StdEncoding.EncodeToString(data)
-	return encoded
-}
-
-// b64d
-// Decodes a base64 string to a byte slice.
-// Returns the decoded byte slice and an error.
-func b64d(data string) (decoded []byte, err error) {
-	decoded, err = base64.StdEncoding.DecodeString(data)
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return decoded, nil
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Failed to close file")
+		}
+	}(file)
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	size := stat.Size()
+	data := make([]byte, size)
+	_, err = file.Read(data)
+
+	return data, err
+}
+
+// readStdin
+// Reads from stdin and returns the contents.
+// Returns the contents of stdin and an error.
+func readStdin() ([]byte, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	size := stat.Size()
+	data := make([]byte, size)
+	_, err = os.Stdin.Read(data)
+
+	return data, err
 }
